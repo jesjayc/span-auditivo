@@ -1,4 +1,12 @@
 // --- CONSTANTS ---
+const TRIAL_DIRECT_SEQUENCES = [
+    { span: 2, sequences: [{ sequence: [8, 3], correct: [8, 3] }, { sequence: [5, 9], correct: [5, 9] }] }
+];
+
+const TRIAL_INVERSE_SEQUENCES = [
+    { span: 2, sequences: [{ sequence: [4, 9], correct: [9, 4] }, { sequence: [5, 2], correct: [2, 5] }] }
+];
+
 const DIRECT_SEQUENCES = [
   { span: 2, sequences: [{ sequence: [3, 8], correct: [3, 8] }, { sequence: [5, 1], correct: [5, 1] }] },
   { span: 3, sequences: [{ sequence: [6, 2, 9], correct: [6, 2, 9] }, { sequence: [4, 7, 1], correct: [4, 7, 1] }] },
@@ -176,8 +184,8 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnStartTest.addEventListener('click', () => {
-        state.gamePhase = 'direct_instructions';
-        setupInstructions('direct');
+        state.gamePhase = 'direct_trial_instructions';
+        setupInstructions('direct_trial');
         showScreen('screen-instructions');
     });
 
@@ -189,21 +197,45 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReady = document.getElementById('btn-ready');
 
     const setupInstructions = (type) => {
-        if (type === 'direct') {
-            instructionTitle.textContent = "Etapa Direta";
+        if (type === 'direct_trial') { // Treino Etapa Direta.
+            instructionTitle.textContent = "Treino - Etapa Direta";
             instructionContent.innerHTML = `
-                <p>Você está prestes a iniciar a <strong>Etapa Direta</strong>.</p>
+                <p>Vamos fazer um rápido treino da <strong>Etapa Direta</strong>.</p>
                 <p>Lembre-se: digite os números na <strong>mesma ordem</strong> que os ouviu.</p>
-                <p>Clique em <strong>"Estou Pronto"</strong> para começar.</p>
+                <p>Se você errar, o sistema pedirá para tentar novamente.</p>
+                <p>Clique em <strong>"Estou pronto"</strong> para começar.</p>
+            `;
+            btnReady.onclick = () => {
+                state.gamePhase = 'direct_trial_test';
+                startTest('direct', true); // true para indicar treino
+            };
+        } else if (type === 'direct') { // Teste Etapa Direta
+            instructionTitle.textContent = "Teste - Etapa Direta";
+            instructionContent.innerHTML = `
+                <p>Muito bem, agora que você entendeu o teste, você está prestes a iniciar a <strong>Etapa Direta</strong>.</p>
+                <p>Lembre-se: digite os números na <strong>mesma ordem</strong> que os ouviu.</p>
+                <p>Clique em <strong>"Estou pronto"</strong> para começar.</p>
             `;
             btnReady.onclick = () => {
                 state.gamePhase = 'direct_test';
-                startTest('direct');
+                startTest('direct', false); // false para indicar teste
             };
-        } else { // inverse
-            instructionTitle.textContent = "Etapa Inversa";
+        } else if (type === 'inverse_trial') { // Treino Etapa Inversa
+            instructionTitle.textContent = "Treino - Etapa Inversa";
             instructionContent.innerHTML = `
-                <p>Nessa próxima etapa você vai ouvir uma sequência de números em áudio, assim como na parte anterior.</p>
+                <p>Vamos fazer um rápido treino da <strong>Etapa Inversa</strong>.</p>
+                <p>Sua tarefa será digitar esses números na <strong>ordem inversa (de trás para frente)</strong>./p>
+                <p>Se você errar, o sistema pedirá para tentar novamente.</p>
+                <p>Clique em <strong>"Estou pronto"</strong> para começar.</p>
+            `;
+            btnReady.onclick = () => {
+                state.gamePhase = 'inverse_trial_test';
+                startTest('inverse', true); // true para indicar treino
+            };
+        } else if (type === 'inverse') { // Teste Etapa Inversa
+            instructionTitle.textContent = "Teste - Etapa Inversa";
+            instructionContent.innerHTML = `
+                <p>Muito bem! Agora que você entendeu, preste atenção: nessa próxima etapa você vai ouvir uma sequência de números em áudio, assim como na parte anterior.</p>
                 <p>No entanto, desta vez, sua tarefa será digitar esses números na ordem inversa (de trás para frente) no teclado do seu computador.</p>
                 <p>Por exemplo, se você ouvir "1, 2, 3", deverá digitar "3, 2, 1".</p>
                 <p class="font-bold">Importante:</p>
@@ -213,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `;
             btnReady.onclick = () => {
                 state.gamePhase = 'inverse_test';
-                startTest('inverse');
+                startTest('inverse', false); // false para indicar teste
             };
         }
     };
@@ -226,10 +258,18 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnRedo = document.getElementById('btn-redo');
     const btnNext = document.getElementById('btn-next');
     
-    const startTest = (stage) => {
+    const startTest = (stage, isTrial = false) => {
+        let sequences;
+        if (isTrial) {
+            sequences = stage === 'direct' ? TRIAL_DIRECT_SEQUENCES : TRIAL_INVERSE_SEQUENCES;
+        } else {
+            sequences = stage === 'direct' ? DIRECT_SEQUENCES : INVERSE_SEQUENCES;
+        }
+
         state.currentTest = {
             stage,
-            sequences: stage === 'direct' ? DIRECT_SEQUENCES : INVERSE_SEQUENCES,
+            isTrial,
+            sequences,
             pairIndex: 0,
             trialIndex: 0,
             errorsInPair: 0,
@@ -265,9 +305,18 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     
     const completeTestStage = () => {
-        const stage = state.currentTest.stage;
-        if (stage === 'direct') {
-            state.gamePhase = 'inverse_instructions';
+        const { stage, isTrial } = state.currentTest;
+
+        if (stage === 'direct' && isTrial) {
+            state.gamePhase = 'direct_instructions';
+            setupInstructions('direct');
+            showScreen('screen-instructions');
+        } else if (stage === 'direct' && !isTrial) {
+            state.gamePhase = 'inverse_trial_instructions';
+            setupInstructions('inverse_trial');
+            showScreen('screen-instructions');
+        } else if (stage === 'inverse' && isTrial) {
+            stage.gamePhase = 'inverse_instructions';
             setupInstructions('inverse');
             showScreen('screen-instructions');
         } else {
@@ -283,21 +332,60 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     btnNext.addEventListener('click', () => {
-        const { pairIndex, trialIndex, sequences, userInput, errorsInPair } = state.currentTest;
+        const { pairIndex, trialIndex, sequences, userInput, errorsInPair, isTrial, stage } = state.currentTest;
         const currentSeqData = sequences[pairIndex].sequences[trialIndex];
         const isCorrect = JSON.stringify(userInput) === JSON.stringify(currentSeqData.correct);
 
-        const newResult = {
-            span: sequences[pairIndex].span,
-            sequence: currentSeqData.sequence,
-            userAnswer: userInput,
-            isCorrect,
-        };
-        state.results[state.currentTest.stage].push(newResult);
+        // Condicional para prender nos Trials até acertar
+        if (isTrial) {
+            if (!isCorrect) {
+                // Um "X" vermelho aparece e não deixa avançar
+                lastTypedDigit.innerHTML = `
+                ${ICONS.X}<br>
+                    <span style="font-size: 1.2rem; color: #ef4444; font-weight: normal; display: block; margin-top: 10px;">
+                        Incorreto! Procure ouvir de novo, atentamente.
+                    </span>
+                `;
+                lastTypedDigit.style.opacity = '1';
+                lastTypedDigit.style.color = 'red';
 
-        const currentErrors = errorsInPair + (isCorrect ? 0 : 1);
+                // Trava a tela para evitar múltiplos cliques
+                document.querySelector('.button-group').style.visibility = 'hidden';
 
-        if (currentErrors >= 2 || (pairIndex >= sequences.length - 1 && trialIndex === 1)) {
+                setTimeout(() => {
+                    lastTypedDigit.style.opacity = '0';
+                    lastTypedDigit.style.color = ''; // volta a cor normal
+                    state.currentTest.lastTyped = null;
+                    state.currentTest.userInput = [];
+                    document.querySelector('.button-group').style.visibility = 'visible';
+
+                    runTestFlow();
+                }, 2000);
+
+                return; // Return para prender nos trials
+            }
+        }
+        // Else para o Teste Oficial
+        else {
+            const newResult = {
+                span: sequences[pairIndex].span,
+                sequence: currentSeqData.sequence,
+                userAnswer: userInput,
+                isCorrect,
+            };
+            state.results[state.currentTest.stage].push(newResult);
+        }
+
+        const currentErrors = isTrial ? 0 : (errorsInPair + (isCorrect ? 0 : 1));
+
+        let shouldStop = false;
+        if (isTrial) {
+            shouldStop = (pairIndex >= sequences.length - 1 && trialIndex === 1);
+        } else {
+            shouldStop = currentErrors >= 2 || (pairIndex >= sequences.length - 1 && trialIndex === 1);
+        }
+
+        if (shouldStop) {
             completeTestStage();
             return;
         }
