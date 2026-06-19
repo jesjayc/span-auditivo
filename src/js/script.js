@@ -90,12 +90,13 @@ document.addEventListener('DOMContentLoaded', () => {
     
     const resetState = () => {
         state = {
-            gamePhase: 'welcome',
+            gamePhase: 'direct_trial_instructions',
             results: { direct: [], inverse: [] },
             currentTest: { stage: null, sequences: [], pairIndex: 0, trialIndex: 0, errorsInPair: 0, userInput: [], lastTyped: null },
             audioTest: { attempts: 0, userInput: '', isPlaying: false, feedback: '', showError: false }
         };
-        showScreen('screen-welcome');
+        setupInstructions('direct_trial');
+        showScreen('screen-instructions');
     };
 
     // --- DOM Elements ---
@@ -473,5 +474,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Initial Load ---
-    showScreen('screen-welcome');
+    state.gamePhase = 'direct_trial_instructions';
+    setupInstructions('direct_trial');
+    showScreen('screen-instructions');
 });
