@@ -1,4 +1,3 @@
-// --- CONSTANTS ---
 const TRIAL_DIRECT_SEQUENCES = [
     { span: 2, sequences: [{ sequence: [8, 3], correct: [8, 3] }, { sequence: [5, 9], correct: [5, 9] }] }
 ];
@@ -38,21 +37,16 @@ const ICONS = {
 // --- AUDIO PLAYER ---
 async function playSequence(sequence, onSequenceEnd) {
     try {
-        // Preload all audio files for the sequence to prevent delays
         const audioElements = sequence.map(digit => new Audio(`src/audio/${digit}.mp3`));
         
         for (const audio of audioElements) {
-            // Await for the current audio to finish playing
             await new Promise(resolve => {
                 audio.onended = resolve;
-                // Play and immediately catch potential errors, resolving the promise to avoid getting stuck.
                 audio.play().catch(err => {
                     console.error(`Error playing audio ${audio.src}:`, err);
-                    resolve(); // Move to the next step even if one sound fails
+                    resolve();
                 });
             });
-
-            // Wait 1000ms after the digit sound has finished.
             await new Promise(resolve => setTimeout(resolve, 1000));
         }
     } catch (error) {
@@ -66,7 +60,6 @@ async function playSequence(sequence, onSequenceEnd) {
 // --- APP LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
 
-    // --- State ---
     let state = {
         gamePhase: 'welcome',
         results: { direct: [], inverse: [] },
@@ -99,10 +92,8 @@ document.addEventListener('DOMContentLoaded', () => {
         showScreen('screen-instructions');
     };
 
-    // --- DOM Elements ---
     const screens = document.querySelectorAll('.screen');
     
-    // --- Screen Switching ---
     const showScreen = (screenId) => {
         screens.forEach(s => s.hidden = true);
         const activeScreen = document.getElementById(screenId);
@@ -110,13 +101,6 @@ document.addEventListener('DOMContentLoaded', () => {
             activeScreen.hidden = false;
         }
     };
-
-    // --- Welcome Screen ---
-    document.getElementById('btn-start').addEventListener('click', () => {
-        state.gamePhase = 'audio_test';
-        initAudioTest();
-        showScreen('screen-audio-test');
-    });
 
     // --- Audio Test Screen ---
     const audioTestContent = document.getElementById('audio-test-content');
@@ -136,7 +120,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const updateAudioTestUI = () => {
         audioTestInputDisplay.textContent = state.audioTest.userInput;
         btnPlayAudio.disabled = state.audioTest.isPlaying;
-        playAudioText.innerHTML = state.audioTest.isPlaying ? `${ICONS.SPEAKER} Reproduzindo...` : 'Reproduzir Áudio';
+        playAudioText.innerHTML = state.audioTest.isPlaying ? `${ICONS.SPEAKER} Reproduzindo...` : '🔊 Reproduzir Áudio';
         btnCheckAudio.disabled = state.audioTest.isPlaying || state.audioTest.userInput.length === 0;
 
         audioTestFeedback.textContent = state.audioTest.feedback;
@@ -198,55 +182,65 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReady = document.getElementById('btn-ready');
 
     const setupInstructions = (type) => {
-        if (type === 'direct_trial') { // Treino Etapa Direta.
-            instructionTitle.textContent = "Treino - Etapa Direta";
+        if (type === 'direct_trial') {
+            instructionTitle.textContent = "Treino - Span de Dígitos (Etapa Direta)";
             instructionContent.innerHTML = `
-                <p>Vamos fazer um rápido treino da <strong>Etapa Direta</strong>.</p>
-                <p>Lembre-se: digite os números na <strong>mesma ordem</strong> que os ouviu.</p>
-                <p>Se você errar, o sistema pedirá para tentar novamente.</p>
-                <p>Clique em <strong>"Estou pronto"</strong> para começar.</p>
+                <p>Nesse teste você vai ouvir uma sequência de números em áudio. Preste bastante atenção.</p>
+                <p>Assim que a sequência terminar, você deverá <strong>digitar os números</strong> que ouviu no teclado do seu computador, na <strong>mesma ordem</strong> em que eles foram falados.</p>
+                <p>Quando terminar de digitar, clique no botão para seguir para a próxima sequência.</p>
+                <p>Se cometer um erro durante a digitação clique no botão "Refazer" e digite novamente a sequência.</p>
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h3 style="color: var(--cyan); text-align: center; margin-bottom: 15px; font-size: 1.2rem;">⚠️ IMPORTANTE</h3>
+                    <p style="text-align: center; margin: 0 auto; max-width: 480px;">A sequência será reproduzida <strong>uma única vez</strong>.<br>A sequência <strong>não pode ser ouvida novamente</strong>.<br>Preste <strong>muita</strong> atenção!</p>
+                </div>
             `;
             btnReady.onclick = () => {
                 state.gamePhase = 'direct_trial_test';
-                startTest('direct', true); // true para indicar treino
+                startTest('direct', true);
             };
-        } else if (type === 'direct') { // Teste Etapa Direta
-            instructionTitle.textContent = "Teste - Etapa Direta";
+        } else if (type === 'direct') {
+            instructionTitle.textContent = "Teste Oficial - Etapa Direta";
             instructionContent.innerHTML = `
-                <p>Muito bem, agora que você entendeu o teste, você está prestes a iniciar a <strong>Etapa Direta</strong>.</p>
-                <p>Lembre-se: digite os números na <strong>mesma ordem</strong> que os ouviu.</p>
-                <p>Clique em <strong>"Estou pronto"</strong> para começar.</p>
+                <p>Excelente! Agora que você entendeu como o teste funciona, vamos para o teste oficial.</p>
+                <p>Lembre-se da regra principal: <strong>digite os números na exata mesma ordem</strong> que os ouvir.</p>
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h3 style="color: var(--cyan); text-align: center; margin-bottom: 15px; font-size: 1.2rem;">⚠️ IMPORTANTE</h3>
+                    <p style="text-align: center; margin: 0 auto; max-width: 480px;">A sequência será reproduzida <strong>uma única vez</strong>.<br>A sequência <strong>não pode ser ouvida novamente</strong>.<br>Preste <strong>muita</strong> atenção!</p>
+                </div>
             `;
             btnReady.onclick = () => {
                 state.gamePhase = 'direct_test';
-                startTest('direct', false); // false para indicar teste
+                startTest('direct', false);
             };
-        } else if (type === 'inverse_trial') { // Treino Etapa Inversa
-            instructionTitle.textContent = "Treino - Etapa Inversa";
+        } else if (type === 'inverse_trial') {
+            instructionTitle.textContent = "Treino - Span de Dígitos (Etapa Inversa)";
             instructionContent.innerHTML = `
-                <p>Vamos fazer um rápido treino da <strong>Etapa Inversa</strong>.</p>
-                <p>Sua tarefa será digitar esses números na <strong>ordem inversa (de trás para frente)</strong>./p>
-                <p>Se você errar, o sistema pedirá para tentar novamente.</p>
-                <p>Clique em <strong>"Estou pronto"</strong> para começar.</p>
+                <p>Nessa próxima etapa de treino você vai ouvir novas sequências de números, assim como na parte anterior.</p>
+                <p>No entanto, desta vez, sua tarefa será digitar os números na <strong>ordem inversa (de trás para frente)</strong> que eles foram falados.</p>
+                <p>Quando terminar de digitar, clique no botão para seguir para a próxima sequência.</p>
+                <p>Se cometer um erro durante a digitação clique no botão "Refazer" e digite novamente a sequência.</p>
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h3 style="color: var(--cyan); text-align: center; margin-bottom: 15px; font-size: 1.2rem;">⚠️ IMPORTANTE</h3>
+                    <p style="text-align: center; margin: 0 auto; max-width: 480px;">A sequência será reproduzida <strong>uma única vez</strong>.<br>A sequência <strong>não pode ser ouvida novamente</strong>.<br>Preste <strong>muita</strong> atenção!</p>
+                </div>
             `;
             btnReady.onclick = () => {
                 state.gamePhase = 'inverse_trial_test';
-                startTest('inverse', true); // true para indicar treino
+                startTest('inverse', true);
             };
-        } else if (type === 'inverse') { // Teste Etapa Inversa
-            instructionTitle.textContent = "Teste - Etapa Inversa";
+        } else if (type === 'inverse') {
+            instructionTitle.textContent = "Teste Oficial - Etapa Inversa";
             instructionContent.innerHTML = `
-                <p>Muito bem! Agora que você entendeu, preste atenção: nessa próxima etapa você vai ouvir uma sequência de números em áudio, assim como na parte anterior.</p>
-                <p>No entanto, desta vez, sua tarefa será digitar esses números na ordem inversa (de trás para frente) no teclado do seu computador.</p>
-                <p>Por exemplo, se você ouvir "1, 2, 3", deverá digitar "3, 2, 1".</p>
-                <p class="font-bold">Importante:</p>
-                <ul class="list">
-                    <li>A sequência será reproduzida uma única vez, e não pode ser ouvida novamente, por isso, preste muita atenção.</li>
-                </ul>
+                <p>Muito bem! Agora que você dominou a inversão, vamos iniciar o teste oficial desta etapa.</p>
+                <p>Lembre-se da regra principal: digite os números na <strong>ordem inversa (de trás para frente)</strong> que eles foram falados.</p>
+                <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
+                    <h3 style="color: var(--cyan); text-align: center; margin-bottom: 15px; font-size: 1.2rem;">⚠️ IMPORTANTE</h3>
+                    <p style="text-align: center; margin: 0 auto; max-width: 480px;">A sequência será reproduzida <strong>uma única vez</strong>.<br>A sequência <strong>não pode ser ouvida novamente</strong>.<br>Preste <strong>muita</strong> atenção!</p>
+                </div>
             `;
             btnReady.onclick = () => {
                 state.gamePhase = 'inverse_test';
-                startTest('inverse', false); // false para indicar teste
+                startTest('inverse', false);
             };
         }
     };
@@ -258,6 +252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const lastTypedDigit = document.getElementById('last-typed-digit');
     const btnRedo = document.getElementById('btn-redo');
     const btnNext = document.getElementById('btn-next');
+    let digitTimeout = null;
     
     const startTest = (stage, isTrial = false) => {
         let sequences;
@@ -285,7 +280,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const { pairIndex, trialIndex, sequences } = state.currentTest;
         const currentSequence = sequences[pairIndex]?.sequences[trialIndex];
         
-        if (!currentSequence) { // Test finished
+        if (!currentSequence) {
             completeTestStage();
             return;
         }
@@ -300,7 +295,7 @@ document.addEventListener('DOMContentLoaded', () => {
             playSequence(currentSequence.sequence, () => {
                 testPlaying.hidden = true;
                 testInputting.hidden = false;
-                state.gamePhase = 'inputting'; // Allow keyboard input
+                state.gamePhase = 'inputting';
             });
         }, 2000);
     };
@@ -317,7 +312,7 @@ document.addEventListener('DOMContentLoaded', () => {
             setupInstructions('inverse_trial');
             showScreen('screen-instructions');
         } else if (stage === 'inverse' && isTrial) {
-            stage.gamePhase = 'inverse_instructions';
+            state.gamePhase = 'inverse_instructions';
             setupInstructions('inverse');
             showScreen('screen-instructions');
         } else {
@@ -337,36 +332,31 @@ document.addEventListener('DOMContentLoaded', () => {
         const currentSeqData = sequences[pairIndex].sequences[trialIndex];
         const isCorrect = JSON.stringify(userInput) === JSON.stringify(currentSeqData.correct);
 
-        // Condicional para prender nos Trials até acertar
         if (isTrial) {
             if (!isCorrect) {
-                // Um "X" vermelho aparece e não deixa avançar
+                if (digitTimeout) clearTimeout(digitTimeout); // protege a mensagem de erro para permanecer mais tempo na tela
+
                 lastTypedDigit.innerHTML = `
                 ${ICONS.X}<br>
-                    <span style="font-size: 1.2rem; color: #ef4444; font-weight: normal; display: block; margin-top: 10px;">
+                    <span style="font-size: 1.2rem; color: var(--error); font-weight: normal; display: block; margin-top: 10px;">
                         Incorreto! Procure ouvir de novo, atentamente.
                     </span>
                 `;
                 lastTypedDigit.style.opacity = '1';
-                lastTypedDigit.style.color = 'red';
 
-                // Trava a tela para evitar múltiplos cliques
                 document.querySelector('.button-group').style.visibility = 'hidden';
 
                 setTimeout(() => {
                     lastTypedDigit.style.opacity = '0';
-                    lastTypedDigit.style.color = ''; // volta a cor normal
                     state.currentTest.lastTyped = null;
                     state.currentTest.userInput = [];
                     document.querySelector('.button-group').style.visibility = 'visible';
-
                     runTestFlow();
                 }, 2000);
 
-                return; // Return para prender nos trials
+                return;
             }
         }
-        // Else para o Teste Oficial
         else {
             const newResult = {
                 span: sequences[pairIndex].span,
@@ -391,11 +381,11 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
         }
         
-        if (trialIndex === 1) { // End of pair
+        if (trialIndex === 1) {
             state.currentTest.pairIndex++;
             state.currentTest.trialIndex = 0;
             state.currentTest.errorsInPair = 0;
-        } else { // Next trial in same pair
+        } else {
             state.currentTest.trialIndex = 1;
             state.currentTest.errorsInPair = currentErrors;
         }
@@ -408,10 +398,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateLastTypedUI = () => {
         const digit = state.currentTest.lastTyped;
+        
+        // Mata o cronômetro fantasma anterior antes de criar um novo!
+        if (digitTimeout) clearTimeout(digitTimeout); 
+
         if (digit !== null) {
             lastTypedDigit.textContent = digit;
             lastTypedDigit.style.opacity = '1';
-            setTimeout(() => {
+            digitTimeout = setTimeout(() => {
                 lastTypedDigit.style.opacity = '0';
                 state.currentTest.lastTyped = null;
             }, 1000);
@@ -463,7 +457,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 state.audioTest.userInput = state.audioTest.userInput.slice(0, -1);
             }
             updateAudioTestUI();
-        } else if (state.gamePhase === 'inputting') { // Phase during the main test
+        } else if (state.gamePhase === 'inputting') {
             if (e.key >= '0' && e.key <= '9') {
                 const digit = parseInt(e.key, 10);
                 state.currentTest.userInput.push(digit);
