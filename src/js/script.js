@@ -113,19 +113,31 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReloadPage = document.getElementById('btn-reload-page');
 
     const initAudioTest = () => {
-        state.audioTest = { attempts: 0, userInput: '', isPlaying: false, feedback: '', showError: false };
+        state.audioTest = { 
+            attempts: 0, 
+            userInput: '', 
+            isPlaying: false, 
+            feedback: '', 
+            showError: false,
+            played: false // TRAVA METODOLÓGICA (CADEADO) INSERIDA AQUI
+        };
         updateAudioTestUI();
     };
 
     const updateAudioTestUI = () => {
-        audioTestInputDisplay.textContent = state.audioTest.userInput;
+        audioTestInputDisplay.textContent = state.audioTest.userInput;  
+        
+        // Comportamento Padronizado: Botão travado enquanto toca
         btnPlayAudio.disabled = state.audioTest.isPlaying;
-        playAudioText.innerHTML = state.audioTest.isPlaying ? `${ICONS.SPEAKER} Reproduzindo...` : '🔊 Reproduzir Áudio';
+        playAudioText.innerHTML = state.audioTest.isPlaying ? '⏳ REPRODUZINDO...' : '▶ REPRODUZIR ÁUDIO';
+        
+        // A checagem agora exige que o input não seja vazio e NÃO esteja tocando
         btnCheckAudio.disabled = state.audioTest.isPlaying || state.audioTest.userInput.length === 0;
 
         audioTestFeedback.textContent = state.audioTest.feedback;
         audioTestFeedback.className = 'feedback';
-        if (state.audioTest.feedback === 'Correto!') {
+        
+        if (state.audioTest.feedback === 'Perfeito! Áudio validado.') {
             audioTestFeedback.classList.add('correct');
             btnStartTest.hidden = false;
             audioTestContent.hidden = true;
@@ -146,19 +158,32 @@ document.addEventListener('DOMContentLoaded', () => {
         state.audioTest.isPlaying = true;
         state.audioTest.feedback = '';
         updateAudioTestUI();
+        
         playSequence([1, 5, 7], () => {
             state.audioTest.isPlaying = false;
+            state.audioTest.played = true; // ABRE O CADEADO AO FINAL
             updateAudioTestUI();
+            
+            // Revalidador automático: checa se ele já digitou a resposta certa durante o áudio
+            if (state.audioTest.userInput === '157') {
+                btnCheckAudio.click(); 
+            }
         });
     });
 
     btnCheckAudio.addEventListener('click', () => {
-        if (state.audioTest.userInput === '157') {
-            state.audioTest.feedback = 'Correto!';
+        // Validação rigorosa: Resposta correta E áudio já finalizado
+        if (state.audioTest.userInput === '157' && state.audioTest.played) {
+            state.audioTest.feedback = 'Perfeito! Áudio validado.';
         } else {
             state.audioTest.attempts++;
             state.audioTest.userInput = '';
-            if (state.audioTest.attempts >= 5) {
+            
+            // Se errou porque tentou validar ANTES do áudio terminar
+            if (state.audioTest.userInput === '157' && !state.audioTest.played) {
+                 state.audioTest.feedback = 'Aguarde o áudio terminar para verificar.';
+                 state.audioTest.attempts--; // Não conta como tentativa errada de digitação
+            } else if (state.audioTest.attempts >= 5) {
                 state.audioTest.showError = true;
                 state.audioTest.feedback = `Você provavelmente está com um problema em seu áudio. Por favor, contate o avaliador para obter auxílio.`;
             } else {
@@ -448,6 +473,33 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // --- Global Keyboard Listener ---
     window.addEventListener('keydown', (e) => {
+        
+        // --- NOVA LÓGICA: Suporte para a Barra de Espaço ---
+        if (e.code === 'Space') {
+            e.preventDefault(); // Evita que a página role para baixo acidentalmente
+
+            if (state.gamePhase === 'audio_test') {
+                const btnStart = document.getElementById('btn-start-test');
+                // Só clica se o botão "Tudo Certo" estiver visível
+                if (btnStart && !btnStart.hidden) btnStart.click(); 
+            } 
+            else if (state.gamePhase.includes('instructions')) {
+                const btnReady = document.getElementById('btn-ready');
+                if (btnReady) btnReady.click();
+            }
+            else if (state.gamePhase === 'inputting') {
+                const btnNext = document.getElementById('btn-next');
+                const testInputting = document.getElementById('test-inputting');
+                // Permite usar o espaço como alternativa ao botão "Próximo"
+                if (btnNext && testInputting && !testInputting.hidden) {
+                    btnNext.click();
+                }
+            }
+            
+            return; // Interrompe o código aqui para não cair na lógica de números abaixo
+        }
+
+        // --- LÓGICA ORIGINAL DE NÚMEROS E BACKSPACE ---
         if (!e.key.match(/^[0-9]$/) && e.key !== 'Backspace') return;
         
         if (state.gamePhase === 'audio_test' && !state.audioTest.isPlaying && !state.audioTest.showError && state.audioTest.feedback !== 'Correto!') {
@@ -468,7 +520,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // --- Initial Load ---
-    state.gamePhase = 'direct_trial_instructions';
-    setupInstructions('direct_trial');
-    showScreen('screen-instructions');
+    state.gamePhase = 'audio_test';
+    initAudioTest();
+    showScreen('screen-audio-test');
 });
