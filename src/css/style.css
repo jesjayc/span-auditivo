@@ -122,3 +122,48 @@ button:disabled { opacity: 0.5; cursor: not-allowed; }
 /* Animações */
 @keyframes pulse { 50% { opacity: .5; } }
 .animate-pulse { animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; }
+
+.btn-action {
+  background: var(--border); 
+  color: var(--text); 
+  border: none; 
+  padding: 10px 30px;
+  border-radius: 12px; 
+  font-weight: bold; 
+  font-size: 1rem; 
+  cursor: pointer;
+  text-transform: uppercase; 
+  letter-spacing: 1px; 
+  box-shadow: 0 4px 0 var(--slate-900);
+  transition: all 0.1s ease;
+}
+.btn-action:active { transform: translateY(4px); box-shadow: 0 0 0 var(--slate-900); }
+.btn-action:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.btn-main {
+  display: inline-block;
+  background: #475569; /* Fundo cinza-escuro (slate) */
+  color: var(--cyan);  /* Texto ciano */
+  border: none;
+  padding: 15px 60px;
+  border-radius: 12px;
+  font-weight: 800;
+  font-size: 1.1rem;
+  letter-spacing: 2px;
+  cursor: pointer;
+  box-shadow: 0 5px 0 var(--slate-900);
+  transition: all 0.1s ease;
+  text-transform: uppercase;
+  width: 100%; /* Botão full-width */
+  margin-top: 15px;
+}
+
+.btn-main:active { 
+  transform: translateY(4px); 
+  box-shadow: 0 1px 0 var(--slate-900); 
+}
+
+.btn-main:disabled { 
+  opacity: 0.5; 
+  cursor: not-allowed; 
+}
