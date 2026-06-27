@@ -9,23 +9,33 @@
 <body>
   <main id="app">
     
-    <!-- Audio Test Screen (Caso precise usar no futuro) -->
+    <!-- Audio Test Screen -->
     <section id="screen-audio-test" class="screen" hidden>
       <div class="card">
-        <h2 class="title">Teste de Áudio</h2>
+        <h2 class="title" style="font-size: 2.2rem;">Teste de Áudio</h2>
         <div class="instructions-text">
-            <p>Antes de iniciar, vamos testar o áudio do seu computador.</p>
+            <p style="margin-bottom: 20px; font-size: 1.1rem;">Clique no botão para ouvir e digite os <strong>3 números</strong> ditos abaixo:</p>
         </div>
         <div id="audio-test-content">
-          <button id="btn-play-audio" class="btn-primary" style="margin-bottom: 20px;">
-            <span id="play-audio-text">🔊 Reproduzir Áudio</span>
+          
+          <!-- Botão de Play padronizado -->
+          <button id="btn-play-audio" class="btn-action" style="margin: 0 auto 15px auto;">
+            <span id="play-audio-text">▶ REPRODUZIR ÁUDIO</span>
           </button>
-          <p style="color: var(--text-dim); margin-bottom: 10px;">Digite os números que você ouviu:</p>
-          <div id="audio-test-input-display" class="input-display"></div>
-          <button id="btn-check-audio" class="btn-secondary" disabled>Verificar</button>
+          
+          <div id="audio-test-input-display" class="input-display" style="margin-top: 15px;"></div>
+          
+          <!-- Botão de Verificar padronizado -->
+          <button id="btn-check-audio" class="btn-secondary" style="text-transform: uppercase; font-weight: bold; letter-spacing: 1px;" disabled>Verificar</button>
         </div>
+        
         <p id="audio-test-feedback" class="feedback"></p>
-        <button id="btn-start-test" class="btn-primary" hidden>Iniciar Teste</button>
+        
+        <!-- Botão de Avanço Full-Width Ciano -->
+        <div style="margin-top: 25px; width: 100%;">
+            <button id="btn-start-test" class="btn-main" hidden>TUDO CERTO! VER INSTRUÇÕES (ESPAÇO)</button>
+        </div>
+        
         <button id="btn-reload-page" class="btn-secondary" hidden>Voltar ao Início</button>
       </div>
     </section>
@@ -35,7 +45,7 @@
       <div class="card">
         <h2 id="instruction-title" class="title"></h2>
         <div id="instruction-content" class="instructions-text"></div>
-        <button id="btn-ready" class="btn-primary">Estou Pronto</button>
+        <button id="btn-ready" class="btn-main">ESTOU PRONTO (ESPAÇO)</button>
       </div>
     </section>
 
