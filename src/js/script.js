@@ -28,17 +28,11 @@ const INVERSE_SEQUENCES = [
   { span: 9, sequences: [{ sequence: [1, 5, 8, 3, 9, 7, 2, 4, 6], correct: [6, 4, 2, 7, 9, 3, 8, 5, 1] }, { sequence: [9, 4, 7, 1, 6, 2, 5, 8, 3], correct: [3, 8, 5, 2, 6, 1, 7, 4, 9] }] },
 ];
 
-const ICONS = {
-    CHECK: '✅',
-    X: '❌',
-    SPEAKER: '🔊'
-};
+const ICONS = { CHECK: '✅', X: '❌', SPEAKER: '🔊' };
 
-// --- AUDIO PLAYER ---
 async function playSequence(sequence, onSequenceEnd) {
     try {
         const audioElements = sequence.map(digit => new Audio(`src/audio/${digit}.mp3`));
-        
         for (const audio of audioElements) {
             await new Promise(resolve => {
                 audio.onended = resolve;
@@ -56,51 +50,48 @@ async function playSequence(sequence, onSequenceEnd) {
     }
 }
 
-
-// --- APP LOGIC ---
 document.addEventListener('DOMContentLoaded', () => {
 
     let state = {
-        gamePhase: 'welcome',
+        participantId: '',
+        gamePhase: 'name_screen', // Inicia pela tela de nome
         results: { direct: [], inverse: [] },
         currentTest: {
-            stage: null,
-            sequences: [],
-            pairIndex: 0,
-            trialIndex: 0,
-            errorsInPair: 0,
-            userInput: [],
-            lastTyped: null,
+            stage: null, sequences: [], pairIndex: 0, trialIndex: 0, errorsInPair: 0, userInput: [], lastTyped: null,
         },
         audioTest: {
-            attempts: 0,
-            userInput: '',
-            isPlaying: false,
-            feedback: '',
-            showError: false
+            attempts: 0, userInput: '', isPlaying: false, feedback: '', showError: false
         }
-    };
-    
-    const resetState = () => {
-        state = {
-            gamePhase: 'direct_trial_instructions',
-            results: { direct: [], inverse: [] },
-            currentTest: { stage: null, sequences: [], pairIndex: 0, trialIndex: 0, errorsInPair: 0, userInput: [], lastTyped: null },
-            audioTest: { attempts: 0, userInput: '', isPlaying: false, feedback: '', showError: false }
-        };
-        setupInstructions('direct_trial');
-        showScreen('screen-instructions');
     };
 
     const screens = document.querySelectorAll('.screen');
-    
     const showScreen = (screenId) => {
         screens.forEach(s => s.hidden = true);
         const activeScreen = document.getElementById(screenId);
-        if (activeScreen) {
-            activeScreen.hidden = false;
-        }
+        if (activeScreen) activeScreen.hidden = false;
     };
+
+    // --- Name Screen ---
+    const btnSubmitName = document.getElementById('btn-submit-name');
+    const inputName = document.getElementById('participant-name-input');
+
+    const submitName = () => {
+        const val = inputName.value.trim();
+        if (!val) {
+            alert("Por favor, digite seu nome ou ID para começar o teste.");
+            inputName.focus();
+            return;
+        }
+        state.participantId = val;
+        state.gamePhase = 'audio_test';
+        initAudioTest();
+        showScreen('screen-audio-test');
+    };
+
+    btnSubmitName.addEventListener('click', submitName);
+    inputName.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') submitName();
+    });
 
     // --- Audio Test Screen ---
     const audioTestContent = document.getElementById('audio-test-content');
@@ -113,25 +104,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const btnReloadPage = document.getElementById('btn-reload-page');
 
     const initAudioTest = () => {
-        state.audioTest = { 
-            attempts: 0, 
-            userInput: '', 
-            isPlaying: false, 
-            feedback: '', 
-            showError: false,
-            played: false // TRAVA METODOLÓGICA (CADEADO) INSERIDA AQUI
-        };
+        state.audioTest = { attempts: 0, userInput: '', isPlaying: false, feedback: '', showError: false, played: false };
         updateAudioTestUI();
     };
 
     const updateAudioTestUI = () => {
         audioTestInputDisplay.textContent = state.audioTest.userInput;  
-        
-        // Comportamento Padronizado: Botão travado enquanto toca
         btnPlayAudio.disabled = state.audioTest.isPlaying;
         playAudioText.innerHTML = state.audioTest.isPlaying ? '⏳ REPRODUZINDO...' : '▶ REPRODUZIR ÁUDIO';
-        
-        // A checagem agora exige que o input não seja vazio e NÃO esteja tocando
         btnCheckAudio.disabled = state.audioTest.isPlaying || state.audioTest.userInput.length === 0;
 
         audioTestFeedback.textContent = state.audioTest.feedback;
@@ -161,28 +141,22 @@ document.addEventListener('DOMContentLoaded', () => {
         
         playSequence([1, 5, 7], () => {
             state.audioTest.isPlaying = false;
-            state.audioTest.played = true; // ABRE O CADEADO AO FINAL
+            state.audioTest.played = true; 
             updateAudioTestUI();
-            
-            // Revalidador automático: checa se ele já digitou a resposta certa durante o áudio
-            if (state.audioTest.userInput === '157') {
-                btnCheckAudio.click(); 
-            }
+            if (state.audioTest.userInput === '157') btnCheckAudio.click(); 
         });
     });
 
     btnCheckAudio.addEventListener('click', () => {
-        // Validação rigorosa: Resposta correta E áudio já finalizado
         if (state.audioTest.userInput === '157' && state.audioTest.played) {
             state.audioTest.feedback = 'Perfeito! Áudio validado.';
         } else {
             state.audioTest.attempts++;
             state.audioTest.userInput = '';
             
-            // Se errou porque tentou validar ANTES do áudio terminar
             if (state.audioTest.userInput === '157' && !state.audioTest.played) {
                  state.audioTest.feedback = 'Aguarde o áudio terminar para verificar.';
-                 state.audioTest.attempts--; // Não conta como tentativa errada de digitação
+                 state.audioTest.attempts--; 
             } else if (state.audioTest.attempts >= 5) {
                 state.audioTest.showError = true;
                 state.audioTest.feedback = `Você provavelmente está com um problema em seu áudio. Por favor, contate o avaliador para obter auxílio.`;
@@ -288,14 +262,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         state.currentTest = {
-            stage,
-            isTrial,
-            sequences,
-            pairIndex: 0,
-            trialIndex: 0,
-            errorsInPair: 0,
-            userInput: [],
-            lastTyped: null,
+            stage, isTrial, sequences, pairIndex: 0, trialIndex: 0, errorsInPair: 0, userInput: [], lastTyped: null,
         };
         showScreen('screen-test');
         runTestFlow();
@@ -343,6 +310,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else {
             state.gamePhase = 'results';
             showScreen('screen-results');
+            sendResultsByEmail(); // Chama o envio automático
         }
     };
 
@@ -359,8 +327,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         if (isTrial) {
             if (!isCorrect) {
-                if (digitTimeout) clearTimeout(digitTimeout); // protege a mensagem de erro para permanecer mais tempo na tela
-
+                if (digitTimeout) clearTimeout(digitTimeout); 
                 lastTypedDigit.innerHTML = `
                 ${ICONS.X}<br>
                     <span style="font-size: 1.2rem; color: var(--error); font-weight: normal; display: block; margin-top: 10px;">
@@ -368,9 +335,7 @@ document.addEventListener('DOMContentLoaded', () => {
                     </span>
                 `;
                 lastTypedDigit.style.opacity = '1';
-
                 document.querySelector('.button-group').style.visibility = 'hidden';
-
                 setTimeout(() => {
                     lastTypedDigit.style.opacity = '0';
                     state.currentTest.lastTyped = null;
@@ -378,22 +343,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     document.querySelector('.button-group').style.visibility = 'visible';
                     runTestFlow();
                 }, 2000);
-
                 return;
             }
         }
         else {
-            const newResult = {
-                span: sequences[pairIndex].span,
-                sequence: currentSeqData.sequence,
-                userAnswer: userInput,
-                isCorrect,
-            };
-            state.results[state.currentTest.stage].push(newResult);
+            state.results[state.currentTest.stage].push({
+                span: sequences[pairIndex].span, sequence: currentSeqData.sequence, userAnswer: userInput, isCorrect,
+            });
         }
 
         const currentErrors = isTrial ? 0 : (errorsInPair + (isCorrect ? 0 : 1));
-
         let shouldStop = false;
         if (isTrial) {
             shouldStop = (pairIndex >= sequences.length - 1 && trialIndex === 1);
@@ -423,8 +382,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const updateLastTypedUI = () => {
         const digit = state.currentTest.lastTyped;
-        
-        // Mata o cronômetro fantasma anterior antes de criar um novo!
         if (digitTimeout) clearTimeout(digitTimeout); 
 
         if (digit !== null) {
@@ -440,69 +397,89 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     };
     
-    // --- Results Screen ---
-    const downloadCSV = () => {
+    // --- Results Screen Functions ---
+    const sendResultsByEmail = async () => {
+        const statusText = document.getElementById('email-status-text');
+        if(!statusText) return;
+        statusText.textContent = '⏳ Enviando resultados para o servidor...';
+        
         const fields = ['etapa', 'span', 'sequencia_apresentada', 'resposta_usuario', 'acertou'];
         const buildRows = (stage, list) => list.map(r => [
-            stage,
-            r.span,
-            `"${r.sequence.join(' ')}"`,
-            `"${r.userAnswer.join(' ')}"`,
-            r.isCorrect ? 'sim' : 'nao'
+            stage, r.span, `"${r.sequence.join(' ')}"`, `"${r.userAnswer.join(' ')}"`, r.isCorrect ? 'sim' : 'nao'
         ]);
-        const rows = [
-            ...buildRows('direta', state.results.direct),
-            ...buildRows('inversa', state.results.inverse)
-        ];
-        const headerRow = ['campo', ...rows.map((_, i) => i + 1)];
-        const fieldRows = fields.map((field, fi) => [field, ...rows.map(row => row[fi])]);
-        const csv = [headerRow, ...fieldRows].map(row => row.join(',')).join('\n');
-        const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `resultados-span-auditivo-${new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-')}.csv`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
+        const rows = [...buildRows('direta', state.results.direct), ...buildRows('inversa', state.results.inverse)];
+        const headerRow = fields.join(';');
+        const csvContent = [headerRow, ...rows.map(r => r.join(';'))].join('\n');
+
+        try {
+            const response = await fetch('/api/enviar', { 
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    dadosCSV: csvContent,
+                    participante: state.participantId
+                })
+            });
+
+            if (response.ok) {
+                statusText.innerHTML = '✅ Resultados salvos e enviados com sucesso!';
+                statusText.style.color = 'var(--cyan)';
+            } else {
+                throw new Error('Erro no servidor');
+            }
+        } catch (error) {
+            console.error("Erro:", error);
+            statusText.innerHTML = '❌ Erro no envio automático. Por favor, clique em "COPIAR DADOS BRUTOS".';
+            statusText.style.color = 'var(--error)';
+        }
     };
 
-    document.getElementById('btn-download-csv').addEventListener('click', downloadCSV);
-    document.getElementById('btn-restart').addEventListener('click', resetState);
+    const copyToClipboard = () => {
+        const fields = ['etapa', 'span', 'sequencia_apresentada', 'resposta_usuario', 'acertou'];
+        const buildRows = (stage, list) => list.map(r => [
+            stage, r.span, `"${r.sequence.join(' ')}"`, `"${r.userAnswer.join(' ')}"`, r.isCorrect ? 'sim' : 'nao'
+        ]);
+        const rows = [...buildRows('direta', state.results.direct), ...buildRows('inversa', state.results.inverse)];
+        
+        let clipText = fields.join('\t') + '\n';
+        rows.forEach(row => { clipText += row.join('\t') + '\n'; });
+        
+        navigator.clipboard.writeText(clipText).then(() => {
+            alert("Resultados copiados! Cole (Ctrl+V) no Excel.");
+        }).catch(err => {
+            alert("Erro ao copiar.");
+        });
+    };
+
+    document.getElementById('btn-copy-bkp').addEventListener('click', copyToClipboard);
+    document.getElementById('btn-exit').addEventListener('click', () => window.location.reload());
 
     // --- Global Keyboard Listener ---
     window.addEventListener('keydown', (e) => {
         
-        // --- NOVA LÓGICA: Suporte para a Barra de Espaço ---
         if (e.code === 'Space') {
-            e.preventDefault(); // Evita que a página role para baixo acidentalmente
-
-            if (state.gamePhase === 'audio_test') {
+            e.preventDefault(); 
+            if (state.gamePhase === 'name_screen') {
+                btnSubmitName.click();
+            } else if (state.gamePhase === 'audio_test') {
                 const btnStart = document.getElementById('btn-start-test');
-                // Só clica se o botão "Tudo Certo" estiver visível
                 if (btnStart && !btnStart.hidden) btnStart.click(); 
-            } 
-            else if (state.gamePhase.includes('instructions')) {
+            } else if (state.gamePhase.includes('instructions')) {
                 const btnReady = document.getElementById('btn-ready');
                 if (btnReady) btnReady.click();
-            }
-            else if (state.gamePhase === 'inputting') {
+            } else if (state.gamePhase === 'inputting') {
                 const btnNext = document.getElementById('btn-next');
                 const testInputting = document.getElementById('test-inputting');
-                // Permite usar o espaço como alternativa ao botão "Próximo"
                 if (btnNext && testInputting && !testInputting.hidden) {
                     btnNext.click();
                 }
             }
-            
-            return; // Interrompe o código aqui para não cair na lógica de números abaixo
+            return; 
         }
 
-        // --- LÓGICA ORIGINAL DE NÚMEROS E BACKSPACE ---
         if (!e.key.match(/^[0-9]$/) && e.key !== 'Backspace') return;
         
-        if (state.gamePhase === 'audio_test' && !state.audioTest.isPlaying && !state.audioTest.showError && state.audioTest.feedback !== 'Correto!') {
+        if (state.gamePhase === 'audio_test' && !state.audioTest.isPlaying && !state.audioTest.showError && state.audioTest.feedback !== 'Perfeito! Áudio validado.') {
             if (e.key >= '0' && e.key <= '9') {
                 state.audioTest.userInput += e.key;
             } else if (e.key === 'Backspace') {
@@ -519,8 +496,6 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
-    // --- Initial Load ---
-    state.gamePhase = 'audio_test';
-    initAudioTest();
-    showScreen('screen-audio-test');
+    showScreen('screen-name');
+    inputName.focus();
 });
