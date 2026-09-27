@@ -454,8 +454,40 @@ document.addEventListener('DOMContentLoaded', () => {
     document.getElementById('btn-copy-bkp').addEventListener('click', copyToClipboard);
     document.getElementById('btn-exit').addEventListener('click', () => window.location.reload());
 
+    // --- SISTEMA DE ABORTO DE SEGURANÇA (0001) ---
+    const ABORT_CODE = "0001";
+    let abortBuffer = "";
+    let abortBufferTimer = null;
+
+    const abortTest = () => {
+        if (state.gamePhase === 'results' || state.gamePhase === 'name_screen') return;
+        
+        if (state.results.direct.length === 0 && state.results.inverse.length === 0) {
+            window.location.reload();
+            return;
+        }
+        
+        state.gamePhase = 'results';
+        showScreen('screen-results');
+        sendResultsByEmail();
+    };
+
     // --- Global Keyboard Listener ---
     window.addEventListener('keydown', (e) => {
+        // Interrompe qualquer ação do teclado se o usuário estiver digitando o nome
+        if (document.activeElement && document.activeElement.tagName === 'INPUT') return;
+
+        // Detector de Aborto (0001)
+        if (e.key.length === 1 && /[a-z0-9]/i.test(e.key)) {
+            abortBuffer = (abortBuffer + e.key.toLowerCase()).slice(-ABORT_CODE.length);
+            clearTimeout(abortBufferTimer);
+            abortBufferTimer = setTimeout(() => { abortBuffer = ""; }, 2000);
+            if (abortBuffer === ABORT_CODE) {
+                abortBuffer = "";
+                abortTest();
+                return;
+            }
+        }
         
         if (e.code === 'Space') {
             e.preventDefault(); 
