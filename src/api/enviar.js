@@ -12,8 +12,7 @@ export default async function handler(req, res) {
     const { dadosCSV, participante } = req.body;
 
     try {
-        const csvBuffer = Buffer.from('\uFEFF' + dadosCSV, 'utf-8');
-        const base64CSV = csvBuffer.toString('base64');
+        const conteudoCSV = '\uFEFF' + dadosCSV;
 
         const respostaResend = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -29,7 +28,7 @@ export default async function handler(req, res) {
                 attachments: [
                     {
                         filename: `resultados-${participante}.csv`,
-                        content: base64CSV
+                        content: conteudoCSV
                     }
                 ]
             })
