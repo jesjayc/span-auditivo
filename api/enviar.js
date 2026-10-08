@@ -12,7 +12,10 @@ export default async function handler(req, res) {
     const { dadosCSV, participante } = req.body;
 
     try {
-        const conteudoCSV = '\uFEFF' + dadosCSV;
+        // A conversão Base64 é OBRIGATÓRIA para anexos no Resend.
+        // O Buffer do Node.js faz essa conversão com segurança na Vercel.
+        const csvBuffer = Buffer.from('\uFEFF' + dadosCSV, 'utf-8');
+        const base64CSV = csvBuffer.toString('base64');
 
         const respostaResend = await fetch('https://api.resend.com/emails', {
             method: 'POST',
@@ -28,7 +31,7 @@ export default async function handler(req, res) {
                 attachments: [
                     {
                         filename: `resultados-${participante}.csv`,
-                        content: conteudoCSV
+                        content: base64CSV // Aqui enviamos o código convertido e seguro
                     }
                 ]
             })
