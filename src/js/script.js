@@ -404,12 +404,22 @@ document.addEventListener('DOMContentLoaded', () => {
         statusText.textContent = '⏳ Enviando resultados para o servidor...';
         
         const fields = ['etapa', 'span', 'sequencia_apresentada', 'resposta_usuario', 'acertou'];
+        
         const buildRows = (stage, list) => list.map(r => [
-            stage, r.span, `"${r.sequence.join(' ')}"`, `"${r.userAnswer.join(' ')}"`, r.isCorrect ? 'sim' : 'nao'
-        ]);
-        const rows = [...buildRows('direta', state.results.direct), ...buildRows('inversa', state.results.inverse)];
+            stage, 
+            r.span, 
+            r.sequence.join(' '), 
+            r.userAnswer.join(' '), 
+            r.isCorrect ? 'sim' : 'nao'
+        ].join(';'));
+        
+        const rows = [
+            ...buildRows('direta', state.results.direct), 
+            ...buildRows('inversa', state.results.inverse)
+        ];
+        
         const headerRow = fields.join(';');
-        const csvContent = [headerRow, ...rows.map(r => r.join(';'))].join('\n');
+        const csvContent = [headerRow, ...rows].join('\n');
 
         try {
             const response = await fetch('/api/enviar', { 
@@ -436,13 +446,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const copyToClipboard = () => {
         const fields = ['etapa', 'span', 'sequencia_apresentada', 'resposta_usuario', 'acertou'];
-        const buildRows = (stage, list) => list.map(r => [
-            stage, r.span, `"${r.sequence.join(' ')}"`, `"${r.userAnswer.join(' ')}"`, r.isCorrect ? 'sim' : 'nao'
-        ]);
-        const rows = [...buildRows('direta', state.results.direct), ...buildRows('inversa', state.results.inverse)];
         
-        let clipText = fields.join('\t') + '\n';
-        rows.forEach(row => { clipText += row.join('\t') + '\n'; });
+        // sem aspas e com tabulação para colar bonitinho
+        const buildRows = (stage, list) => list.map(r => [
+            stage, 
+            r.span, 
+            r.sequence.join(' '), 
+            r.userAnswer.join(' '), 
+            r.isCorrect ? 'sim' : 'nao'
+        ].join('\t'));
+        
+        const rows = [
+            ...buildRows('direta', state.results.direct), 
+            ...buildRows('inversa', state.results.inverse)
+        ];
+        
+        const headerRow = fields.join('\t');
+        const clipText = [headerRow, ...rows].join('\n');
         
         navigator.clipboard.writeText(clipText).then(() => {
             alert("Resultados copiados! Cole (Ctrl+V) no Excel.");
