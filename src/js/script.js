@@ -182,7 +182,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     const setupInstructions = (type) => {
         if (type === 'direct_trial') {
-            instructionTitle.textContent = "Treino - Span de Dígitos (Etapa Direta)";
+            instructionTitle.textContent = "Span Auditivo - Etapa Direta";
             instructionContent.innerHTML = `
                 <p>Nesse teste você vai ouvir uma sequência de números em áudio. Preste bastante atenção.</p>
                 <p>Assim que a sequência terminar, você deverá <strong>digitar os números</strong> que ouviu no teclado do seu computador, na <strong>mesma ordem</strong> em que eles foram falados.</p>
@@ -200,7 +200,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'direct') {
             instructionTitle.textContent = "Teste Oficial - Etapa Direta";
             instructionContent.innerHTML = `
-                <p>Excelente! Agora que você entendeu como o teste funciona, vamos para o teste oficial.</p>
+                <p>Excelente! Agora que você entendeu como o teste funciona, vamos para o teste.</p>
                 <p>Lembre-se da regra principal: <strong>digite os números na exata mesma ordem</strong> que os ouvir.</p>
                 <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
                     <h3 style="color: var(--cyan); text-align: center; margin-bottom: 15px; font-size: 1.2rem;">⚠️ IMPORTANTE</h3>
@@ -212,7 +212,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 startTest('direct', false);
             };
         } else if (type === 'inverse_trial') {
-            instructionTitle.textContent = "Treino - Span de Dígitos (Etapa Inversa)";
+            instructionTitle.textContent = "Span Auditivo - Etapa Inversa";
             instructionContent.innerHTML = `
                 <p>Nessa próxima etapa de treino você vai ouvir novas sequências de números, assim como na parte anterior.</p>
                 <p>No entanto, desta vez, sua tarefa será digitar os números na <strong>ordem inversa (de trás para frente)</strong> que eles foram falados.</p>
@@ -230,7 +230,7 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (type === 'inverse') {
             instructionTitle.textContent = "Teste Oficial - Etapa Inversa";
             instructionContent.innerHTML = `
-                <p>Muito bem! Agora que você dominou a inversão, vamos iniciar o teste oficial desta etapa.</p>
+                <p>Muito bem! Agora que você dominou a inversão, vamos iniciar o teste desta etapa.</p>
                 <p>Lembre-se da regra principal: digite os números na <strong>ordem inversa (de trás para frente)</strong> que eles foram falados.</p>
                 <div style="margin-top: 25px; padding-top: 20px; border-top: 1px solid var(--border);">
                     <h3 style="color: var(--cyan); text-align: center; margin-bottom: 15px; font-size: 1.2rem;">⚠️ IMPORTANTE</h3>
@@ -439,40 +439,10 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         } catch (error) {
             console.error("Erro:", error);
-            statusText.innerHTML = '❌ Erro no envio automático. Por favor, clique em "COPIAR DADOS BRUTOS".';
+            statusText.innerHTML = '❌ Erro no envio automático. Por favor, avise o avaliador.';
             statusText.style.color = 'var(--error)';
         }
     };
-
-    const copyToClipboard = () => {
-        const fields = ['etapa', 'span', 'sequencia_apresentada', 'resposta_usuario', 'acertou'];
-        
-        // sem aspas e com tabulação para colar bonitinho
-        const buildRows = (stage, list) => list.map(r => [
-            stage, 
-            r.span, 
-            r.sequence.join(' '), 
-            r.userAnswer.join(' '), 
-            r.isCorrect ? 'sim' : 'nao'
-        ].join('\t'));
-        
-        const rows = [
-            ...buildRows('direta', state.results.direct), 
-            ...buildRows('inversa', state.results.inverse)
-        ];
-        
-        const headerRow = fields.join('\t');
-        const clipText = [headerRow, ...rows].join('\n');
-        
-        navigator.clipboard.writeText(clipText).then(() => {
-            alert("Resultados copiados! Cole (Ctrl+V) no Excel.");
-        }).catch(err => {
-            alert("Erro ao copiar.");
-        });
-    };
-
-    document.getElementById('btn-copy-bkp').addEventListener('click', copyToClipboard);
-    document.getElementById('btn-exit').addEventListener('click', () => window.location.reload());
 
     // --- SISTEMA DE ABORTO DE SEGURANÇA (0001) ---
     const ABORT_CODE = "0001";
