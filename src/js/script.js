@@ -18,7 +18,7 @@ const DIRECT_SEQUENCES = [
 ];
 
 const INVERSE_SEQUENCES = [
-  { span: 2, sequences: [{ sequence: [5, 2], correct: [2, 5] }, { sequence: [9, 1], correct: [1, 9] }] },
+  { span: 2, sequences: [{ sequence: [7, 3], correct: [3, 7] }, { sequence: [9, 1], correct: [1, 9] }] },
   { span: 3, sequences: [{ sequence: [7, 2, 3], correct: [3, 2, 7] }, { sequence: [4, 8, 6], correct: [6, 8, 4] }] },
   { span: 4, sequences: [{ sequence: [1, 9, 2, 5], correct: [5, 2, 9, 1] }, { sequence: [3, 6, 4, 7], correct: [7, 4, 6, 3] }] },
   { span: 5, sequences: [{ sequence: [8, 4, 1, 5, 7], correct: [7, 5, 1, 4, 8] }, { sequence: [2, 5, 9, 3, 6], correct: [6, 3, 9, 5, 2] }] },
